@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document Q&A</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; background: #0f0f0f; color: #e0e0e0; min-height: 100vh; }
+        .container { max-width: 800px; margin: 0 auto; padding: 40px 20px; }
+        h1 { font-size: 28px; font-weight: 600; margin-bottom: 6px; color: #ffffff; }
+        .subtitle { color: #888; font-size: 14px; margin-bottom: 40px; }
+        .section { background: #1a1a1a; border: 1px solid #2a2a2a; border-radius: 12px; padding: 24px; margin-bottom: 20px; }
+        .section-title { font-size: 14px; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; color: #888; margin-bottom: 16px; }
+        .upload-area { border: 2px dashed #333; border-radius: 8px; padding: 32px; text-align: center; cursor: pointer; transition: border-color 0.2s; }
+        .upload-area:hover { border-color: #4a9eff; }
+        .upload-area.dragover { border-color: #4a9eff; background: #1e2a3a; }
+        .upload-area input { display: none; }
+        .upload-icon { font-size: 32px; margin-bottom: 8px; }
+        .upload-text { color: #888; font-size: 14px; }
+        .upload-text span { color: #4a9eff; text-decoration: underline; }
+        .file-list { margin-top: 12px; font-size: 13px; color: #888; }
+        .file-item { display: flex; justify-content: space-between; align-items: center; padding: 8px 12px; background: #111; border-radius: 6px; margin-top: 8px; }
+        .btn-delete { padding: 4px 12px !important; font-size: 12px !important; background: #ef4444 !important; border-radius: 6px !important; min-width: auto; }
+        .btn-delete:hover { background: #dc2626 !important; }
+        .btn-clear { padding: 6px 14px !important; font-size: 11px !important; background: transparent !important; border: 1px solid #333 !important; color: #888 !important; border-radius: 6px !important; min-width: auto; }
+        .btn-clear:hover { border-color: #ef4444 !important; color: #ef4444 !important; }
+        .section-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+        .qa-input-group { display: flex; gap: 10px; }
+        input[type="text"] { flex: 1; padding: 12px 16px; background: #111; border: 1px solid #333; border-radius: 8px; color: #e0e0e0; font-size: 15px; outline: none; transition: border-color 0.2s; }
+        input[type="text"]:focus { border-color: #4a9eff; }
+        button { padding: 12px 24px; background: #4a9eff; color: #fff; border: none; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; transition: background 0.2s; white-space: nowrap; }
+        button:hover { background: #3a8eef; }
+        button:disabled { background: #333; color: #666; cursor: not-allowed; }
+        .answer-box { margin-top: 16px; display: none; }
+        .answer-label { font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; color: #4a9eff; margin-bottom: 8px; }
+        .answer-text { font-size: 15px; line-height: 1.7; color: #d0d0d0; }
+        .sources { margin-top: 16px; padding-top: 16px; border-top: 1px solid #2a2a2a; }
+        .source-item { font-size: 12px; color: #666; padding: 6px 0; }
+        .source-item strong { color: #888; }
+        .status-bar { display: flex; gap: 20px; font-size: 12px; color: #555; margin-top: 20px; }
+        .status-dot { display: inline-block; width: 6px; height: 6px; border-radius: 50%; margin-right: 6px; background: #333; }
+        .status-dot.active { background: #4ade80; }
+        .loading { display: inline-block; width: 16px; height: 16px; border: 2px solid #333; border-top-color: #4a9eff; border-radius: 50%; animation: spin 0.8s linear infinite; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .toast { position: fixed; bottom: 30px; right: 30px; padding: 12px 20px; background: #1a1a1a; border: 1px solid #2a2a2a; border-radius: 8px; font-size: 13px; color: #e0e0e0; display: none; z-index: 100; }
+        .toast.error { border-color: #ef4444; }
+        .toast.success { border-color: #4ade80; }
+        .history-item { padding: 12px; background: #111; border-radius: 8px; margin-top: 8px; }
+        .history-q { font-size: 13px; color: #4a9eff; margin-bottom: 4px; }
+        .history-a { font-size: 13px; color: #999; }
+        .history-time { font-size: 11px; color: #444; margin-top: 4px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Document Q&A</h1>
+        <p class="subtitle">Upload PDFs, ask questions — powered by RAG + PostgreSQL</p>
+
+        <div class="section">
+            <div class="section-title">Upload Document</div>
+            <div class="upload-area" id="uploadArea">
+                <div class="upload-icon">📄</div>
+                <div class="upload-text">Drag & drop a PDF or <span>browse</span></div>
+                <input type="file" id="fileInput" accept=".pdf">
+            </div>
+            <div class="file-list" id="fileList"></div>
+        </div>
+
+        <div class="section">
+            <div class="section-title">Ask a Question</div>
+            <div class="qa-input-group">
+                <input type="text" id="questionInput" placeholder="What would you like to know about your documents?">
+                <button id="askBtn" onclick="askQuestion()">Ask</button>
+            </div>
+            <div class="answer-box" id="answerBox">
+                <div class="answer-label">Answer</div>
+                <div class="answer-text" id="answerText"></div>
+                <div class="sources" id="sourcesBox"></div>
+            </div>
+        </div>
+
+        <div class="section">
+            <div class="section-header">
+                <div class="section-title" style="margin-bottom:0;">Recent History</div>
+                <button class="btn-clear" onclick="clearHistory()">Clear History</button>
+            </div>
+            <div id="historyList"><p style="color:#555;font-size:13px;">No questions asked yet.</p></div>
+        </div>
+
+        <div class="status-bar" id="statusBar">
+            <div><span class="status-dot" id="statusDot"></span> <span id="statusText">Loading...</span></div>
+        </div>
+    </div>
+
+    <div class="toast" id="toast"></div>
+
+    <script>
+        const uploadArea = document.getElementById('uploadArea');
+        const fileInput = document.getElementById('fileInput');
+
+        uploadArea.addEventListener('click', () => fileInput.click());
+        uploadArea.addEventListener('dragover', (e) => { e.preventDefault(); uploadArea.classList.add('dragover'); });
+        uploadArea.addEventListener('dragleave', () => { uploadArea.classList.remove('dragover'); });
+        uploadArea.addEventListener('drop', (e) => {
+            e.preventDefault(); uploadArea.classList.remove('dragover');
+            const file = e.dataTransfer.files[0];
+            if (file && file.name.endsWith('.pdf')) uploadFile(file);
+            else showToast('Only PDF files are accepted.', 'error');
+        });
+        fileInput.addEventListener('change', (e) => { if (e.target.files[0]) uploadFile(e.target.files[0]); });
+
+        async function uploadFile(file) {
+            const formData = new FormData();
+            formData.append('file', file);
+            uploadArea.innerHTML = '<div class="loading"></div><div class="upload-text" style="margin-top:10px">Processing...</div>';
+            try {
+                const res = await fetch('/upload', { method: 'POST', body: formData });
+                const data = await res.json();
+                if (!res.ok) throw new Error(data.detail || 'Upload failed');
+                showToast(`${file.name} uploaded — ${data.pages} pages, ${data.chunks} chunks`, 'success');
+                loadStats(); loadHistory();
+            } catch (err) { showToast(err.message, 'error'); }
+            uploadArea.innerHTML = '<div class="upload-icon">📄</div><div class="upload-text">Drag & drop a PDF or <span>browse</span></div><input type="file" id="fileInput" accept=".pdf">';
+            document.getElementById('fileInput').addEventListener('change', (e) => { if (e.target.files[0]) uploadFile(e.target.files[0]); });
+        }
+
+        const questionInput = document.getElementById('questionInput');
+        questionInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') askQuestion(); });
+
+        async function askQuestion() {
+            const question = questionInput.value.trim();
+            if (!question) return;
+            const askBtn = document.getElementById('askBtn');
+            askBtn.disabled = true; askBtn.innerHTML = '<span class="loading"></span>';
+            try {
+                const res = await fetch('/ask', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ question }) });
+                const data = await res.json();
+                if (!res.ok) throw new Error(data.detail || 'Failed to get answer');
+                document.getElementById('answerText').textContent = data.answer;
+                const sourcesBox = document.getElementById('sourcesBox');
+                sourcesBox.innerHTML = data.sources && data.sources.length > 0
+                    ? data.sources.map((s, i) => `<div class="source-item"><strong>[${i+1}]</strong> ${s.source} (page ${s.page})</div>`).join('')
+                    : '';
+                document.getElementById('answerBox').style.display = 'block';
+                loadHistory();
+            } catch (err) { showToast(err.message, 'error'); }
+            askBtn.disabled = false; askBtn.textContent = 'Ask';
+        }
+
+        async function loadStats() {
+            try {
+                const res = await fetch('/stats');
+                const data = await res.json();
+                document.getElementById('statusDot').classList.toggle('active', data.vectorstore_ready);
+                document.getElementById('statusText').textContent = `${data.documents_loaded} document(s) loaded · ${data.llm_provider} · ${data.embedding_model.split('/').pop()}`;
+                const fileList = document.getElementById('fileList');
+                fileList.innerHTML = data.files.length > 0 ? data.files.map(f => `<div class="file-item"><span>📎 ${f}</span><button onclick="deleteDoc('${f}')" style="padding:4px 12px;font-size:12px;background:#ef4444;border-radius:6px;">✕</button></div>`).join('') : '';
+            } catch (err) { document.getElementById('statusText').textContent = 'API unreachable'; }
+        }
+
+        async function loadHistory() {
+            try {
+                const res = await fetch('/history?limit=5');
+                const data = await res.json();
+                const list = document.getElementById('historyList');
+                if (data.length === 0) { list.innerHTML = '<p style="color:#555;font-size:13px;">No questions asked yet.</p>'; return; }
+                list.innerHTML = data.map(h => `<div class="history-item"><div class="history-q">Q: ${h.question}</div><div class="history-a">A: ${h.answer.substring(0, 200)}${h.answer.length > 200 ? '...' : ''}</div><div class="history-time">${new Date(h.asked_at).toLocaleString()}</div></div>`).join('');
+            } catch (err) {}
+        }
+
+        async function deleteDoc(filename) {
+            if (!confirm(`Delete "${filename}"?`)) return;
+            try {
+                const res = await fetch(`/documents/${encodeURIComponent(filename)}`, { method: 'DELETE' });
+                const data = await res.json();
+                if (!res.ok) throw new Error(data.detail || 'Delete failed');
+                showToast(`${filename} deleted`, 'success');
+                loadStats(); loadHistory();
+            } catch (err) { showToast(err.message, 'error'); }
+        }
+
+        async function clearHistory() {
+            if (!confirm('Clear all Q&A history?')) return;
+            try {
+                const res = await fetch('/history', { method: 'DELETE' });
+                const data = await res.json();
+                if (!res.ok) throw new Error(data.detail || 'Clear failed');
+                showToast('History cleared', 'success');
+                loadHistory();
+            } catch (err) { showToast(err.message, 'error'); }
+        }
+
+        function showToast(msg, type = '') {
+            const toast = document.getElementById('toast');
+            toast.textContent = msg; toast.className = `toast ${type}`; toast.style.display = 'block';
+            setTimeout(() => { toast.style.display = 'none'; }, 4000);
+        }
+
+        loadStats(); loadHistory();
+    </script>
+</body>
+</html>

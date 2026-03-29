@@ -1,0 +1,31 @@
+# Web Framework
+fastapi
+uvicorn
+python-multipart
+jinja2
+
+# LangChain
+langchain
+langchain-classic
+langchain-community
+langchain-core
+langchain-text-splitters
+langchain-huggingface
+
+# Embeddings & Vector Store
+sentence-transformers
+faiss-cpu
+
+# PDF Processing
+pypdf
+
+# LLM Provider
+langchain-anthropic
+
+# Database
+sqlalchemy
+psycopg2-binary
+
+# Utils
+python-dotenv
+numpy<2.0
