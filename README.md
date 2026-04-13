@@ -62,7 +62,7 @@ cp .env.example .env
 docker compose up --build
 
 ```
-### Running without an API key (free, local)
+Running without an API key (free, local)
 
 1. Install Ollama: https://ollama.com/download
 2. Pull a model in terminal: `ollama pull llama3.1`
