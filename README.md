@@ -60,6 +60,16 @@ cp .env.example .env
 # Edit .env — add your Anthropic API key
 
 docker compose up --build
+
+### Running without an API key (free, local)
+
+1. Install Ollama: https://ollama.com/download
+2. Pull a model in terminal: `ollama pull llama3.1`
+3. In your `.env` file, set:
+LLM_PROVIDER=ollama
+OLLAMA_MODEL=llama3.1
+4. Run: `docker compose up --build`
+
 ```
 
 Open http://localhost:8000 for the web UI or http://localhost:8000/docs for Swagger API docs.
