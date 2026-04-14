@@ -20,7 +20,7 @@ Base = declarative_base()
 
 
 # ============================================================
-# Table Definitions (SQLAlchemy models — these must be classes)
+# Table Definitions (SQLAlchemy models)
 # ============================================================
 
 class Document(Base):
