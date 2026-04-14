@@ -1,5 +1,5 @@
 """
-Configuration — All settings and environment variables in one place.
+Configuration — All settings and environment variables.
 """
 
 import os
